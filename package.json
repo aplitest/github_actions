@@ -1,4 +1,19 @@
 {
+  "name": "your-project-name",
+  "version": "1.0.0",
+  "description": "A description of your project",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "private": true,
+  "devDependencies": {
+    "semantic-release": "^21.0.0",  // Ensure you use the latest version or your required version
+    "@semantic-release/commit-analyzer": "^10.0.0",
+    "@semantic-release/release-notes-generator": "^12.0.0",
+    "@semantic-release/github": "^10.0.0",
+    "@semantic-release/npm": "^10.0.0"
+  },
   "release": {
     "branches": ["master"],
     "plugins": [
