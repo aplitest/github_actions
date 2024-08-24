@@ -23,11 +23,20 @@ jobs:
         # Convert the workflow_run event to JSON
         release='${{ toJson(github.event.workflow_run) }}'
         
-        # Extract the tag name (if available) and prerelease status
-        tag_name=$(echo $release | jq -r '.head_commit.message')
-        is_prerelease=$(echo $release | jq -r '.event.inputs.prerelease')
+        # Extract the commit message and other potential information
+        commit_message=$(echo $release | jq -r '.head_commit.message')
 
-        # Output based on the release type
+        # Use the commit message as the tag name (if applicable)
+        tag_name=$commit_message
+
+        # Check if the message contains "pre-release" or something similar to infer prerelease status
+        if echo "$commit_message" | grep -iq "pre-release"; then
+          is_prerelease="true"
+        else
+          is_prerelease="false"
+        fi
+
+        # Output based on the inferred release type
         if [ "$is_prerelease" = "true" ]; then
           echo "Tag: $tag_name - This is a pre-release."
         else
@@ -36,3 +45,4 @@ jobs:
 
     - name: Echo message
       run: echo "Build release"
+      
