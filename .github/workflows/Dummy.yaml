@@ -10,6 +10,8 @@ jobs:
   dummy:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
     - name: Print the entire JSON event payload
@@ -18,29 +20,27 @@ jobs:
         echo "Workflow Run JSON Payload:"
         echo '${{ toJson(github.event.workflow_run) }}' | jq .
 
-    - name: Extract and print release information
+    - name: Get the latest release info using GitHub API
+      id: release_info
       run: |
-        # Convert the workflow_run event to JSON
-        release='${{ toJson(github.event.workflow_run) }}'
-        
-        # Extract the commit message
-        commit_message=$(echo $release | jq -r '.head_commit.message')
-        echo "Commit Message: $commit_message"
+        # Fetch the latest release information using GitHub API
+        api_url="https://api.github.com/repos/${{ github.repository }}/releases/latest"
+        response=$(curl -s -H "Authorization: token $GITHUB_TOKEN" $api_url)
 
-        # Use the commit message as the tag name (if applicable)
-        tag_name=$commit_message
+        # Extract the tag name and pre-release status from the API response
+        tag_name=$(echo $response | jq -r '.tag_name')
+        is_prerelease=$(echo $response | jq -r '.prerelease')
+
+        # Print the extracted values for debugging
         echo "Tag Name: $tag_name"
-
-        # Check if the message contains "pre-release" to infer prerelease status
-        if echo "$commit_message" | grep -iq "pre-release"; then
-          is_prerelease="true"
-        else
-          is_prerelease="false"
-        fi
-
-        # Print the pre-release status
         echo "Is Pre-release: $is_prerelease"
 
+        # Store the extracted values in the GitHub Actions output
+        echo "tag_name=$tag_name" >> $GITHUB_ENV
+        echo "is_prerelease=$is_prerelease" >> $GITHUB_ENV
+
+    - name: Echo release type
+      run: |
         # Output based on the inferred release type
         if [ "$is_prerelease" = "true" ]; then
           echo "Tag: $tag_name - This is a pre-release."
