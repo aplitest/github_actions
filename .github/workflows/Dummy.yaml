@@ -12,19 +12,19 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - name: Print the entire JSON event payload
+      run: |
+        # Convert the workflow_run event to JSON and print it
+        echo "Workflow Run JSON Payload:"
+        echo '${{ toJson(github.event.workflow_run) }}' | jq .
+
     - name: Extract release information
       run: |
-        # Extract the release event payload
-        release=${{ toJson(github.event.workflow_run) }}
-        # Print the entire JSON payload to the console
-        echo "Workflow Run JSON Payload:"
-        echo $release | jq .
-        echo "Workflow Run JSON Payload Done"
-
-        # Extract the tag name from the release
-        tag_name=$(echo $release | jq -r '.event.inputs.tag_name')
-
-        # Check if it's a pre-release
+        # Convert the workflow_run event to JSON
+        release='${{ toJson(github.event.workflow_run) }}'
+        
+        # Extract the tag name (if available) and prerelease status
+        tag_name=$(echo $release | jq -r '.head_commit.message')
         is_prerelease=$(echo $release | jq -r '.event.inputs.prerelease')
 
         # Output based on the release type
