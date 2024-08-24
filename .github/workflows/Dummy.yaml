@@ -18,23 +18,28 @@ jobs:
         echo "Workflow Run JSON Payload:"
         echo '${{ toJson(github.event.workflow_run) }}' | jq .
 
-    - name: Extract release information
+    - name: Extract and print release information
       run: |
         # Convert the workflow_run event to JSON
         release='${{ toJson(github.event.workflow_run) }}'
         
-        # Extract the commit message and other potential information
+        # Extract the commit message
         commit_message=$(echo $release | jq -r '.head_commit.message')
+        echo "Commit Message: $commit_message"
 
         # Use the commit message as the tag name (if applicable)
         tag_name=$commit_message
+        echo "Tag Name: $tag_name"
 
-        # Check if the message contains "pre-release" or something similar to infer prerelease status
+        # Check if the message contains "pre-release" to infer prerelease status
         if echo "$commit_message" | grep -iq "pre-release"; then
           is_prerelease="true"
         else
           is_prerelease="false"
         fi
+
+        # Print the pre-release status
+        echo "Is Pre-release: $is_prerelease"
 
         # Output based on the inferred release type
         if [ "$is_prerelease" = "true" ]; then
