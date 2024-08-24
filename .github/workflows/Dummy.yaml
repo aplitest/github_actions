@@ -12,13 +12,22 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Check if release is pre-release or release
+    - name: Extract release information
       run: |
-        # Get the release details using GitHub CLI
-        release_info=$(gh release view ${{ github.event.workflow_run.head_commit.message }} --json tagName,isPrerelease)
-        tag_name=$(echo $release_info | jq -r '.tagName')
-        is_prerelease=$(echo $release_info | jq -r '.isPrerelease')
-        
+        # Extract the release event payload
+        release=${{ toJson(github.event.workflow_run) }}
+        # Print the entire JSON payload to the console
+        echo "Workflow Run JSON Payload:"
+        echo $release | jq .
+        echo "Workflow Run JSON Payload Done"
+
+        # Extract the tag name from the release
+        tag_name=$(echo $release | jq -r '.event.inputs.tag_name')
+
+        # Check if it's a pre-release
+        is_prerelease=$(echo $release | jq -r '.event.inputs.prerelease')
+
+        # Output based on the release type
         if [ "$is_prerelease" = "true" ]; then
           echo "Tag: $tag_name - This is a pre-release."
         else
