@@ -1,4 +1,4 @@
-name: PR Workflow with Approval
+name: PR Workflow with Approval and Merge
 
 on:
   pull_request:
@@ -6,6 +6,9 @@ on:
 
   pull_request_review:
     types: [submitted]
+
+  pull_request_target:
+    types: [closed]
 
 jobs:
   job1:
@@ -24,4 +27,13 @@ jobs:
     steps:
       - name: Job 2 - After Approval
         run: echo "Job 2 is running after PR approval"
+
+  job3:
+    name: Run Job 3 on Merge
+    runs-on: ubuntu-latest
+    needs: job1
+    if: ${{ github.event_name == 'pull_request_target' && github.event.pull_request.merged == true }}
+    steps:
+      - name: Job 3 - After Merge
+        run: echo "Job 3 is running after PR merge"
         
