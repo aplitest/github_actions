@@ -1,39 +1,49 @@
-name: PR Workflow with Approval and Merge
+name: Deployment Workflow with Manual Approval
 
 on:
   pull_request:
-    types: [opened, reopened]
-
-  pull_request_review:
-    types: [submitted]
-
-  pull_request_target:
-    types: [closed]
+    types: [opened, reopened, synchronize]
 
 jobs:
-  job1:
-    name: Run Job 1 on PR Open
+  create_deployment:
+    name: Create Deployment
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'pull_request' && github.event.action == 'opened' }}
-    steps:
-      - name: Job 1 - Initial Tasks
-        run: echo "Job 1 is running on PR open"
 
-  job2:
-    name: Run Job 2 after PR Approval
-    runs-on: ubuntu-latest
-    needs: job1
-    if: ${{ github.event_name == 'pull_request_review' && github.event.review.state == 'approved' }}
     steps:
-      - name: Job 2 - After Approval
-        run: echo "Job 2 is running after PR approval"
+      - name: Create a deployment
+        id: create_deployment
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const result = await github.repos.createDeployment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: context.payload.pull_request.head.sha,
+              environment: 'production',
+              required_contexts: [],
+              auto_merge: false,
+              transient_environment: true
+            });
+            return result.data.id;
+          result-encoding: string
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  job3:
-    name: Run Job 3 on Merge
+  wait_for_approval:
+    name: Wait for Manual Approval
     runs-on: ubuntu-latest
-    needs: job1
-    if: ${{ github.event_name == 'pull_request_target' && github.event.pull_request.merged == true }}
+    needs: create_deployment
     steps:
-      - name: Job 3 - After Merge
-        run: echo "Job 3 is running after PR merge"
+      - name: Wait for approval
+        run: echo "Waiting for manual approval..."
+        env:
+          DEPLOYMENT_ID: ${{ needs.create_deployment.outputs.result }}
+
+  finalize_deployment:
+    name: Finalize Deployment
+    runs-on: ubuntu-latest
+    needs: wait_for_approval
+    steps:
+      - name: Complete the deployment
+        run: echo "Deployment approved, proceeding..."
         
