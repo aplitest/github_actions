@@ -1,0 +1,14 @@
+name: Dummy Action tag
+
+on:
+  push:
+    tags:
+      - 'v1.1.*'  # Trigger on tags matching this pattern
+
+jobs:
+  dummy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Echo message
+      run: echo "Build release"
