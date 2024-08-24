@@ -3,7 +3,7 @@ name: Create Release
 on:
   push:
     branches:
-      - master  # Trigger release creation when pushing to the 'main' branch
+      - master # Trigger release creation when pushing to the 'main' branch
 
 jobs:
   create-release:
@@ -12,6 +12,12 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
+
+    - name: Archive repository
+      run: |
+        zip -r repo.zip .
+        mkdir -p release-asset
+        mv repo.zip release-asset/
 
     - name: Create release tag
       id: create_release
@@ -23,10 +29,11 @@ jobs:
         release_name: Release v1.1.${{ github.run_number }}
         body: 'Automatic release created by GitHub Actions'
 
-    - name: Upload release assets (optional)
+    - name: Upload release asset
       uses: actions/upload-release-asset@v1
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./path/to/your/asset.zip
-        asset_name: asset.zip
+        asset_path: ./release-asset/repo.zip
+        asset_name: repo.zip
         asset_content_type: application/zip
+
