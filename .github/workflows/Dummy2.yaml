@@ -1,0 +1,43 @@
+name: Dummy Action2
+
+on:
+  workflow_run:
+    workflows: ["Create Release"]
+    types:
+      - completed
+
+jobs:
+  dummy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Get the latest release
+      id: get_release
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        latest_release=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
+        https://api.github.com/repos/${{ github.repository }}/releases/latest)
+        echo "Latest release: $latest_release"
+        
+        # Extract the author login
+        author_login=$(echo "$latest_release" | jq -r '.author.login')
+        echo "Author: $author_login"
+        
+        # Extract the tag name
+        release_tag=$(echo "$latest_release" | jq -r '.tag_name')
+        echo "Release Tag: $release_tag"
+        
+        # Determine if it's a pre-release
+        prerelease=$(echo "$latest_release" | jq -r '.prerelease')
+        echo "Pre-release: $prerelease"
+        
+        # Check if the release was created by GitHub Actions
+        if [ "$author_login" == "github-actions[bot]" ]; then
+          if [ "$prerelease" == "true" ]; then
+            echo "Tag: $release_tag - This is a pre-release."
+          else
+            echo "Tag: $release_tag - This is a release."
+          fi
+        else
+          echo "This release was not created by GitHub Actions."
+        fi
