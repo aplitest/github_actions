@@ -8,9 +8,22 @@ on:
 
 jobs:
   dummy:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
 
     steps:
+    - name: Check if release is pre-release or release
+      run: |
+        # Get the release details using GitHub CLI
+        release_info=$(gh release view ${{ github.event.workflow_run.head_commit.message }} --json tagName,isPrerelease)
+        tag_name=$(echo $release_info | jq -r '.tagName')
+        is_prerelease=$(echo $release_info | jq -r '.isPrerelease')
+        
+        if [ "$is_prerelease" = "true" ]; then
+          echo "Tag: $tag_name - This is a pre-release."
+        else
+          echo "Tag: $tag_name - This is a release."
+        fi
+
     - name: Echo message
       run: echo "Build release"
-      
