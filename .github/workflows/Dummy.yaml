@@ -1,0 +1,16 @@
+name: Dummy Action
+
+on:
+  workflow_run:
+    workflows: ["Create Release"]
+    types:
+      - completed
+
+jobs:
+  dummy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Echo message
+      run: echo "Build release"
+      
