@@ -3,6 +3,7 @@ name: Create Release
 on:
   push:
     branches:
+      - stage
       - master # Trigger release creation when pushing to the 'main' branch
 
 jobs:
