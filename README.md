@@ -2,3 +2,4 @@
 Example repository for configuring Django with GitHub actions
 
 
+
